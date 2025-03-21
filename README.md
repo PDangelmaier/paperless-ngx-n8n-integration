@@ -203,7 +203,7 @@ Don't forget to give the project a star! Thanks again!
 ### Top contributors:
 
 <a href="https://github.com/PDangelmaier/paperless-ngx-n8n-integration/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=othneildrew/Best-README-Template" alt="contrib.rocks image" />
+  <img src="https://github.com/PDangelmaier/paperless-ngx-n8n-integration" alt="contrib.rocks image" />
 </a>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -224,7 +224,7 @@ Distributed under the Unlicense License. See `LICENSE.txt` for more information.
 
 Your Name - [@your_twitter](https://twitter.com/your_username) - email@example.com
 
-Project Link: [https://github.com/your_username/repo_name](https://github.com/your_username/repo_name)
+Project Link: https://github.com/PDangelmaier/paperless-ngx-n8n-integration/
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
