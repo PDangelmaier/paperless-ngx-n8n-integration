@@ -34,10 +34,10 @@
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Best-README-Template</h3>
+  <h3 align="center">Paperless-ngx and n8n Integration via Model Context Protocol</h3>
 
   <p align="center">
-    An awesome README template to jumpstart your projects!
+    A seamless integration between Paperless-ngx document management system and n8n workflow automation using the Model Context Protocol
     <br />
     <a href="https://github.com/PDangelmaier/paperless-ngx-n8n-integration"><strong>Explore the docs »</strong></a>
     <br />
@@ -85,16 +85,20 @@
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
-There are many great README templates available on GitHub; however, I didn't find one that really suited my needs so I created this enhanced one. I want to create a README template so amazing that it'll be the last one you ever need -- I think this is it.
+This project implements an integration between Paperless-ngx (a document management system) and n8n (a workflow automation tool) using the Model Context Protocol (MCP). This integration allows AI models to interact with your document management system and automate workflows between these tools in a standardized way.
 
-Here's why:
-* Your time should be focused on creating something amazing. A project that solves a problem and helps others
-* You shouldn't be doing the same tasks over and over like creating a README from scratch
-* You should implement DRY principles to the rest of your life :smile:
+### What is Model Context Protocol (MCP)?
 
-Of course, no one template will serve all projects since your needs may be different. So I'll be adding more in the near future. You may also suggest changes by forking this repo and creating a pull request or opening an issue. Thanks to all the people have contributed to expanding this template!
+The Model Context Protocol (MCP) is a standardized way for applications to provide context to AI models. It allows for:
+* Exposing data through Resources (similar to GET endpoints)
+* Providing functionality through Tools (similar to POST endpoints)
+* Defining interaction patterns through Prompts (reusable templates)
 
-Use the `BLANK_README.md` to get started.
+By implementing MCP for Paperless-ngx and n8n, we create a bridge that enables AI models to:
+* Query and retrieve document information from Paperless-ngx
+* Trigger and manage workflows in n8n
+* Create automation chains between these systems
+* Process and analyze documents in intelligent ways
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -102,16 +106,12 @@ Use the `BLANK_README.md` to get started.
 
 ### Built With
 
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
+This integration is built with the following technologies:
 
-* [![Next][Next.js]][Next-url]
-* [![React][React.js]][React-url]
-* [![Vue][Vue.js]][Vue-url]
-* [![Angular][Angular.io]][Angular-url]
-* [![Svelte][Svelte.dev]][Svelte-url]
-* [![Laravel][Laravel.com]][Laravel-url]
-* [![Bootstrap][Bootstrap.com]][Bootstrap-url]
-* [![JQuery][JQuery.com]][JQuery-url]
+* [Python](https://www.python.org/) - The primary programming language for the MCP server
+* [Paperless-ngx](https://docs.paperless-ngx.com/) - Document management system
+* [n8n](https://n8n.io/) - Workflow automation tool
+* [Model Context Protocol](https://github.com/anthropics/anthropic-cookbook/blob/main/model_context_protocol/README.md) - Protocol for AI model integration
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -120,38 +120,46 @@ This section should list any major frameworks/libraries used to bootstrap your p
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+Follow these instructions to set up the MCP integration between Paperless-ngx and n8n on your local system.
 
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+Before you begin, ensure you have the following:
+
+* A running instance of Paperless-ngx
+* A running instance of n8n
+* Python 3.8 or higher
+* Access to an AI model that supports MCP (such as Claude)
 
 ### Installation
 
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
+1. Clone the repository
+   ```sh
+   git clone https://github.com/PDangelmaier/paperless-ngx-n8n-integration.git
+   cd paperless-ngx-n8n-integration
+   ```
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+2. Install the MCP Python SDK
    ```sh
-   git clone https://github.com/github_username/repo_name.git
+   pip install mcp-sdk
    ```
-3. Install NPM packages
+
+3. Set up environment variables for your integration
    ```sh
-   npm install
+   export PAPERLESS_NGX_API_URL="https://your-paperless-instance/api"
+   export PAPERLESS_NGX_API_KEY="your-api-key"
+   export N8N_API_URL="https://your-n8n-instance/api"
+   export N8N_API_KEY="your-api-key"
    ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
-5. Change git remote url to avoid accidental pushes to base project
+
+4. Run your MCP server
    ```sh
-   git remote set-url origin github_username/repo_name
-   git remote -v # confirm the changes
+   python mcp_server.py
+   ```
+
+5. Install in Claude Desktop (if you're using Claude as your LLM)
+   ```sh
+   # Follow the Claude Desktop instructions for installing custom MCP integrations
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -161,9 +169,45 @@ _Below is an example of how you can instruct your audience on installing and set
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Once the MCP server is running, AI models that support MCP can interact with your Paperless-ngx and n8n systems in various ways:
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+### Query Document Information
+
+```
+# Example prompt to an MCP-enabled AI model
+Please find all invoices from last month in my Paperless-ngx system and summarize them.
+```
+
+The AI can:
+* Access document metadata
+* Search for documents by content
+* List tags and categories
+
+### Automate Workflows
+
+```
+# Example prompt to an MCP-enabled AI model
+When I receive a new invoice from Acme Corp, trigger the invoice processing workflow in n8n.
+```
+
+The AI can:
+* Trigger n8n workflows with specific documents
+* Process documents and update metadata
+* Create automation chains between paperless-ngx and other systems
+
+### Analyze Documents
+
+```
+# Example prompt to an MCP-enabled AI model
+Review this contract document and extract the key obligations and deadlines.
+```
+
+The AI can:
+* Generate summaries of documents
+* Suggest appropriate tags
+* Extract action items or important information
+
+_For more examples, please refer to the [Documentation](https://github.com/PDangelmaier/paperless-ngx-n8n-integration/wiki)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -172,6 +216,14 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 <!-- ROADMAP -->
 ## Roadmap
 
+<<<<<<< HEAD
+- [x] Basic MCP server implementation
+- [x] Paperless-ngx document retrieval integration
+- [x] n8n workflow triggering functionality
+- [ ] Enhanced document analysis capabilities
+- [ ] Support for custom document processing workflows
+- See the [open issues](https://github.com/PDangelmaier/paperless-ngx-n8n-integration/issues) for a full list of proposed features (and known issues).
+=======
 - [x] Add Changelog
 - [x] Add back to top links
 - [ ] Add Additional Templates w/ Examples
@@ -181,6 +233,7 @@ _For more examples, please refer to the [Documentation](https://example.com)_
     - [ ] Spanish
 
 See the [open issues](https://github.com/PDangelmaier/paperless-ngx-n8n-integration/issues) for a full list of proposed features (and known issues).
+>>>>>>> 7064d2687701965746684bdff81c72a7d915d0a9
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -203,7 +256,11 @@ Don't forget to give the project a star! Thanks again!
 ### Top contributors:
 
 <a href="https://github.com/PDangelmaier/paperless-ngx-n8n-integration/graphs/contributors">
+<<<<<<< HEAD
+  <img src="https://contrib.rocks/image?repo=PDangelmaier/paperless-ngx-n8n-integration" alt="contrib.rocks image" />
+=======
   <img src="https://github.com/PDangelmaier/paperless-ngx-n8n-integration" alt="contrib.rocks image" />
+>>>>>>> 7064d2687701965746684bdff81c72a7d915d0a9
 </a>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -222,9 +279,13 @@ Distributed under the Unlicense License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@your_twitter](https://twitter.com/your_username) - email@example.com
+P. Dangelmaier - [@PDangelmaier](https://github.com/PDangelmaier)
 
+<<<<<<< HEAD
+Project Link: [https://github.com/PDangelmaier/paperless-ngx-n8n-integration](https://github.com/PDangelmaier/paperless-ngx-n8n-integration)
+=======
 Project Link: https://github.com/PDangelmaier/paperless-ngx-n8n-integration/
+>>>>>>> 7064d2687701965746684bdff81c72a7d915d0a9
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -233,16 +294,20 @@ Project Link: https://github.com/PDangelmaier/paperless-ngx-n8n-integration/
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-Resources i find helpful and would like to give credit to.
+Resources and projects that helped make this integration possible:
 
-* [Choose an Open Source License](https://choosealicense.com)
-* [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
-* [Malven's Flexbox Cheatsheet](https://flexbox.malven.co/)
-* [Malven's Grid Cheatsheet](https://grid.malven.co/)
-* [Img Shields](https://shields.io)
-* [GitHub Pages](https://pages.github.com)
-* [Font Awesome](https://fontawesome.com)
-* [React Icons](https://react-icons.github.io/react-icons/search)
+* [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx) - The amazing document management system
+* [n8n](https://n8n.io/) - The powerful workflow automation platform
+* [Model Context Protocol](https://github.com/anthropics/anthropic-cookbook/blob/main/model_context_protocol/README.md) - For enabling standardized AI interactions
+* [Anthropic Claude](https://www.anthropic.com/claude) - A powerful AI assistant that supports MCP
+* [Best-README-Template](https://github.com/othneildrew/Best-README-Template) - For the README structure
+
+## Benefits of This Approach
+
+1. **Standardized Interface**: MCP provides a consistent way for AI models to interact with your paperless-ngx and n8n systems.
+2. **Security**: The MCP server controls what data and functionality is exposed to the AI.
+3. **Extensibility**: You can easily add more resources and tools as needed.
+4. **AI Model Agnostic**: Works with any AI model that supports the Model Context Protocol.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -259,9 +324,9 @@ Resources i find helpful and would like to give credit to.
 [issues-shield]: https://img.shields.io/github/issues/PDangelmaier/paperless-ngx-n8n-integration.svg?style=for-the-badge
 [issues-url]: https://github.com/PDangelmaier/paperless-ngx-n8n-integration/issues
 [license-shield]: https://img.shields.io/github/license/PDangelmaier/paperless-ngx-n8n-integration.svg?style=for-the-badge
-[license-url]: https://github.com/PDangelmaier/paperless-ngx-n8n-integration/blob/master/LICENSE.txt
+[license-url]: https://github.com/PDangelmaier/paperless-ngx-n8n-integration/blob/main/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/othneildrew
+[linkedin-url]: https://linkedin.com/in/PDangelmaier
 [product-screenshot]: images/screenshot.png
 [Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
 [Next-url]: https://nextjs.org/
