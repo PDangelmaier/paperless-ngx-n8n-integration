@@ -1,0 +1,171 @@
+version: '3.8'
+
+# This docker-compose file sets up the complete integration stack with:
+# 1. Paperless-ngx - Document management system
+# 2. n8n - Workflow automation tool
+# 3. MCP server - Custom Model Context Protocol server for AI integration
+
+services:
+  # ================================
+  # Paperless-ngx Configuration
+  # ================================
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    container_name: paperless-ngx
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - postgres
+    ports:
+      - "8000:8000"  # Web UI port
+    environment:
+      # Database connection settings
+      - PAPERLESS_DBHOST=postgres
+      - PAPERLESS_DBNAME=paperless
+      - PAPERLESS_DBUSER=paperless
+      - PAPERLESS_DBPASS=paperlesspass
+      # Redis settings
+      - PAPERLESS_REDIS=redis://redis:6379
+      # OCR language settings
+      - PAPERLESS_OCR_LANGUAGE=eng
+      # Optional: Paperless admin user settings
+      - PAPERLESS_ADMIN_USER=${PAPERLESS_ADMIN_USER:-admin}
+      - PAPERLESS_ADMIN_PASSWORD=${PAPERLESS_ADMIN_PASSWORD:-password}
+      # Optional: Enable API Key authentication for our MCP server
+      - PAPERLESS_ENABLE_API_KEY_AUTH=1
+      # Configure API URL for consumption scripts
+      - PAPERLESS_URL=http://paperless:8000
+      # Set time zone
+      - TZ=${TZ:-UTC}
+    volumes:
+      - paperless-data:/usr/src/paperless/data
+      - paperless-media:/usr/src/paperless/media
+      - paperless-export:/usr/src/paperless/export
+      - paperless-consume:/usr/src/paperless/consume
+    networks:
+      - paperless-network
+  
+  # ================================
+  # PostgreSQL Database for Paperless
+  # ================================
+  postgres:
+    image: postgres:13
+    container_name: paperless-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=paperless
+      - POSTGRES_USER=paperless
+      - POSTGRES_PASSWORD=paperlesspass
+    volumes:
+      - paperless-pgdata:/var/lib/postgresql/data
+    networks:
+      - paperless-network
+  
+  # ================================
+  # Redis for Paperless
+  # ================================
+  redis:
+    image: redis:6
+    container_name: paperless-redis
+    restart: unless-stopped
+    volumes:
+      - paperless-redis:/data
+    networks:
+      - paperless-network
+
+  # ================================
+  # n8n Workflow Automation
+  # ================================
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"  # Web UI port
+    environment:
+      # Basic n8n settings
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_HOST=n8n
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-yourcustomencryptionkey}
+      # Database settings (using SQLite for simplicity)
+      - DB_TYPE=sqlite
+      - DB_PATH=/home/node/.n8n/database.sqlite
+      # Set time zone
+      - TZ=${TZ:-UTC}
+      # Optional: Basic authentication for the editor
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH:-false}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-password}
+    volumes:
+      - n8n-data:/home/node/.n8n
+    networks:
+      - paperless-network
+      
+  # ================================
+  # MCP Server - Custom Python Integration
+  # ================================
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile  # You'll need to create this Dockerfile
+    container_name: mcp-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"  # MCP server API port
+    environment:
+      # MCP Server configuration
+      - MCP_SERVER_PORT=3000
+      - MCP_SERVER_HOST=0.0.0.0
+      - MCP_DEBUG=${MCP_DEBUG:-false}
+      # Paperless-ngx API connection
+      - PAPERLESS_API_URL=http://paperless:8000/api
+      - PAPERLESS_API_KEY=${PAPERLESS_API_KEY}
+      # n8n API connection
+      - N8N_API_URL=http://n8n:5678/api
+      - N8N_API_KEY=${N8N_API_KEY}
+      # Set time zone
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ./src:/app/src  # Mount the source code for development
+      - mcp-data:/app/data  # For persistent MCP server data
+    depends_on:
+      - paperless
+      - n8n
+    networks:
+      - paperless-network
+
+# ================================
+# Persistent Storage Volumes
+# ================================
+volumes:
+  # Paperless-ngx volumes
+  paperless-data:
+    # Stores application data and configurations
+  paperless-media:
+    # Stores processed documents and their thumbnails
+  paperless-export:
+    # For document exports
+  paperless-consume:
+    # Input directory for documents to be consumed
+  paperless-pgdata:
+    # PostgreSQL database files
+  paperless-redis:
+    # Redis data
+  
+  # n8n volumes
+  n8n-data:
+    # Stores workflows, credentials, and execution data
+  
+  # MCP server volumes
+  mcp-data:
+    # Stores MCP server data and cache
+
+# ================================
+# Network Configuration
+# ================================
+networks:
+  paperless-network:
+    # Custom network for internal communication between services
+    driver: bridge
+

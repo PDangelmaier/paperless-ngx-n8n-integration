@@ -1,0 +1,299 @@
+{
+  "name": "Paperless-ngx Document Chat",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "paperless-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "paperless-document-chat-webhook",
+      "notes": "This webhook accepts POST requests with a document ID and a user query in the request body. Example: { \"documentId\": 123, \"query\": \"What is the main topic of this document?\" }"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract request data\nconst documentId = $input.item.json.body.documentId;\nconst userQuery = $input.item.json.body.query;\n\n// Validate inputs\nif (!documentId) {\n  throw new Error('Document ID is required');\n}\n\nif (!userQuery) {\n  throw new Error('Query is required');\n}\n\n// Return the data for the next nodes\nreturn {\n  documentId,\n  userQuery\n};"
+      },
+      "name": "Extract Request Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ],
+      "notes": "Extracts and validates the document ID and user query from the incoming webhook request."
+    },
+    {
+      "parameters": {
+        "requestMethod": "GET",
+        "url": "={{ $env.PAPERLESS_API_URL }}/api/documents/{{ $json.documentId }}/",
+        "options": {
+          "allowUnauthorizedCerts": true
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Token {{ $env.PAPERLESS_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "Fetch Document",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "notes": "Fetches document metadata from Paperless-ngx API. Uses environment variables for API URL and token. Set these in your n8n environment variables or workflow variables."
+    },
+    {
+      "parameters": {
+        "requestMethod": "GET",
+        "url": "={{ $env.PAPERLESS_API_URL }}/api/documents/{{ $json.documentId }}/download/",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "binaryPropertyName": "document"
+          }
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Token {{ $env.PAPERLESS_TOKEN }}"
+            }
+          ]
+        }
+      },
+      "name": "Download Document",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ],
+      "notes": "Downloads the actual document file from Paperless-ngx and stores it as binary data for processing."
+    },
+    {
+      "parameters": {
+        "dataPropertyName": "document",
+        "options": {}
+      },
+      "name": "Extract Document Text",
+      "type": "n8n-nodes-base.extractPdfContent",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        300
+      ],
+      "notes": "Extracts text content from the PDF document. If your documents are not PDFs, you may need to use a different node or custom function to extract text."
+    },
+    {
+      "parameters": {
+        "functionCode": "// Combine document metadata and content\nconst documentData = $input.item.json;\nconst textContent = $('Extract Document Text').item.json.text;\nconst userQuery = $('Extract Request Data').item.json.userQuery;\n\n// Get metadata fields\nconst title = documentData.title || 'Untitled';\nconst created_date = documentData.created_date || 'Unknown';\nconst correspondent = documentData.correspondent_name || 'Unknown';\nconst tags = documentData.tags || [];\n\n// Prepare prompt context\nconst documentContext = {\n  title,\n  created_date,\n  correspondent,\n  tags,\n  content: textContent,\n  userQuery\n};\n\nreturn documentContext;"
+      },
+      "name": "Prepare Document Context",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        300
+      ],
+      "notes": "Combines document metadata (title, date, tags, etc.) with the extracted text content and user query to create a comprehensive context for the AI."
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "apiKey": "={{ $env.OPENAI_API_KEY }}",
+        "baseUrl": "https://api.openai.com",
+        "model": "gpt-4",
+        "prompt": {
+          "promptType": "user",
+          "message": "I'm going to provide you with a document and a question about that document. Please respond to the question based only on the information contained in the document.\n\nDocument Title: {{ $json.title }}\nCreated Date: {{ $json.created_date }}\nCorrespondent: {{ $json.correspondent }}\nTags: {{ $json.tags }}\n\nDocument Content:\n{{ $json.content }}\n\nUser Question: {{ $json.userQuery }}\n\nPlease provide a concise, accurate response to the question based only on the contents of this document. If the document doesn't contain information to answer the question, please state that clearly."
+        },
+        "options": {
+          "temperature": 0.2,
+          "maxTokens": 1500
+        }
+      },
+      "name": "Process with AI",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        300
+      ],
+      "notes": "Processes the document content and user query with OpenAI's GPT model. The prompt instructs the AI to only use information from the document to answer the question. You can adjust the model, temperature, and max tokens as needed."
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "documentId",
+              "value": "={{ $('Extract Request Data').item.json.documentId }}"
+            },
+            {
+              "name": "query",
+              "value": "={{ $('Extract Request Data').item.json.userQuery }}"
+            },
+            {
+              "name": "documentTitle",
+              "value": "={{ $('Fetch Document').item.json.title }}"
+            },
+            {
+              "name": "response",
+              "value": "={{ $('Process with AI').item.json.response }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        300
+      ],
+      "notes": "Formats the final response with relevant information including document ID, title, original query, and the AI's response."
+    },
+    {
+      "parameters": {
+        "respondWithJson": true,
+        "responseData": "={{ $json }}",
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        300
+      ],
+      "notes": "Sends the formatted response back to the original webhook caller with the AI's answer and relevant document information."
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Request Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Request Data": {
+      "main": [
+        [
+          {
+            "node": "Fetch Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Document": {
+      "main": [
+        [
+          {
+            "node": "Download Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Document": {
+      "main": [
+        [
+          {
+            "node": "Extract Document Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Document Text": {
+      "main": [
+        [
+          {
+            "node": "Prepare Document Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Document Context": {
+      "main": [
+        [
+          {
+            "node": "Process with AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process with AI": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowCredentialUser",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "",
+  "triggerCount": 0,
+  "tags": [
+    "paperless-ngx",
+    "document-management",
+    "ai",
+    "chat"
+  ],
+  "notes": "# Paperless-ngx Document Chat Workflow\n\n## Overview\nThis workflow allows users to chat with documents stored in Paperless-ngx by sending queries through a webhook. The workflow fetches the document from Paperless-ngx, extracts its content, processes the user's query with an AI model, and returns a relevant response.\n\n## Setup Requirements\n1. Configure the following environment variables in n8n:\n   - `PAPERLESS_API_URL`: URL of your Paperless-ngx instance (e.g., http://paperless.local:8000)\n   - `PAPERLESS_TOKEN`: API token from Paperless-ngx\n   - `OPENAI_API_KEY`: Your OpenAI API key\n\n2. Activate the webhook to receive document queries.\n\n## Using the Workflow\nSend a POST request to the webhook URL with a JSON body containing:\n```json\n{\n  \"documentId\": 123,\n  \"query\": \"What is the main topic of this document?\"\n}\n```\n\nThe workflow will respond with the AI's analysis of the document content related to your query.\n\n## Customization Options\n- Modify the AI prompt in the \"Process with AI\" node to change how the AI interprets documents\n- Adjust the OpenAI model and parameters like temperature and max tokens\n- Add additional document processing steps for different file types\n\n## Integration with MCP\nThis workflow works with the Paperless-ngx MCP integration by accessing documents directly through the Paperless-ngx API. If you're using the Model Context Protocol server from this repository, you can modify this workflow to use the MCP endpoints instead."
+}
+

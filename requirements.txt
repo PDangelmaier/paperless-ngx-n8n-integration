@@ -1,0 +1,26 @@
+# MCP Server Requirements
+
+# Model Context Protocol SDK
+mcp-sdk>=0.1.0
+
+# API Framework
+fastapi>=0.68.0
+uvicorn>=0.15.0
+pydantic>=1.8.2
+
+# HTTP Requests
+requests>=2.26.0
+
+# Environment Management
+python-dotenv>=0.19.0
+
+# Utilities
+loguru>=0.5.3
+python-multipart>=0.0.5
+
+# JSON Handling
+json5>=0.9.6
+
+# Type Hints
+typing-extensions>=3.10.0
+

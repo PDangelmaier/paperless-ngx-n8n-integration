@@ -85,7 +85,7 @@
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
-This project implements an integration between Paperless-ngx (a document management system) and n8n (a workflow automation tool) using the Model Context Protocol (MCP). This integration allows AI models to interact with your document management system and automate workflows between these tools in a standardized way.
+This project implements an integration between Paperless-ngx (a document management system) and n8n (a workflow automation tool) using the Model Context Protocol (MCP). This integration creates a bridge that allows AI models to interact with your document management system and automate workflows between these systems in a standardized, secure way.
 
 ### What is Model Context Protocol (MCP)?
 
@@ -133,15 +133,40 @@ Before you begin, ensure you have the following:
 
 ### Installation
 
+There are two ways to set up this integration:
+
+#### Option 1: Using Docker Compose (Recommended)
+
 1. Clone the repository
    ```sh
    git clone https://github.com/PDangelmaier/paperless-ngx-n8n-integration.git
    cd paperless-ngx-n8n-integration
    ```
 
-2. Install the MCP Python SDK
+2. Create a `.env` file based on the provided example
    ```sh
-   pip install mcp-sdk
+   cp .env.example .env
+   # Edit .env with your specific configuration
+   ```
+
+3. Start the complete stack with Docker Compose
+   ```sh
+   docker-compose up -d
+   ```
+
+This will start Paperless-ngx, n8n, and the MCP server all configured to work together.
+
+#### Option 2: Manual Installation
+
+1. Clone the repository
+   ```sh
+   git clone https://github.com/PDangelmaier/paperless-ngx-n8n-integration.git
+   cd paperless-ngx-n8n-integration
+   ```
+
+2. Install dependencies
+   ```sh
+   pip install -r requirements.txt
    ```
 
 3. Set up environment variables for your integration
@@ -150,16 +175,17 @@ Before you begin, ensure you have the following:
    export PAPERLESS_NGX_API_KEY="your-api-key"
    export N8N_API_URL="https://your-n8n-instance/api"
    export N8N_API_KEY="your-api-key"
+   export MCP_SERVER_PORT="8000"
    ```
 
 4. Run your MCP server
    ```sh
-   python mcp_server.py
+   python src/mcp_server.py
    ```
 
-5. Install in Claude Desktop (if you're using Claude as your LLM)
+5. Connect with your preferred AI model that supports MCP (such as Claude)
    ```sh
-   # Follow the Claude Desktop instructions for installing custom MCP integrations
+   # Follow the specific instructions for your AI model to connect to your MCP server
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -170,7 +196,6 @@ Before you begin, ensure you have the following:
 ## Usage
 
 Once the MCP server is running, AI models that support MCP can interact with your Paperless-ngx and n8n systems in various ways:
-
 ### Query Document Information
 
 ```
@@ -207,6 +232,13 @@ The AI can:
 * Suggest appropriate tags
 * Extract action items or important information
 
+### Example Implementation
+
+We've included a sample implementation in the `examples` directory:
+* A document chat workflow for n8n (`examples/paperless_document_chat_workflow.json`) that allows conversing with documents
+* A Python client example (`examples/mcp_client_example.py`) demonstrating how to programmatically connect to the MCP server
+
+_For more examples, please refer to the [Documentation](https://github.com/PDangelmaier/paperless-ngx-n8n-integration/wiki)_
 _For more examples, please refer to the [Documentation](https://github.com/PDangelmaier/paperless-ngx-n8n-integration/wiki)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -216,24 +248,20 @@ _For more examples, please refer to the [Documentation](https://github.com/PDang
 <!-- ROADMAP -->
 ## Roadmap
 
-<<<<<<< HEAD
 - [x] Basic MCP server implementation
 - [x] Paperless-ngx document retrieval integration
 - [x] n8n workflow triggering functionality
+- [x] Docker Compose setup for easy deployment
+- [x] Example document chat workflow for n8n
+- [x] Python client example
 - [ ] Enhanced document analysis capabilities
 - [ ] Support for custom document processing workflows
-- See the [open issues](https://github.com/PDangelmaier/paperless-ngx-n8n-integration/issues) for a full list of proposed features (and known issues).
-=======
-- [x] Add Changelog
-- [x] Add back to top links
-- [ ] Add Additional Templates w/ Examples
-- [ ] Add "components" document to easily copy & paste sections of the readme
+- [ ] More pre-built n8n workflows
 - [ ] Multi-language Support
-    - [ ] Chinese
-    - [ ] Spanish
+  - [ ] German
+  - [ ] Spanish
 
 See the [open issues](https://github.com/PDangelmaier/paperless-ngx-n8n-integration/issues) for a full list of proposed features (and known issues).
->>>>>>> 7064d2687701965746684bdff81c72a7d915d0a9
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -256,11 +284,7 @@ Don't forget to give the project a star! Thanks again!
 ### Top contributors:
 
 <a href="https://github.com/PDangelmaier/paperless-ngx-n8n-integration/graphs/contributors">
-<<<<<<< HEAD
   <img src="https://contrib.rocks/image?repo=PDangelmaier/paperless-ngx-n8n-integration" alt="contrib.rocks image" />
-=======
-  <img src="https://github.com/PDangelmaier/paperless-ngx-n8n-integration" alt="contrib.rocks image" />
->>>>>>> 7064d2687701965746684bdff81c72a7d915d0a9
 </a>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -281,11 +305,7 @@ Distributed under the Unlicense License. See `LICENSE.txt` for more information.
 
 P. Dangelmaier - [@PDangelmaier](https://github.com/PDangelmaier)
 
-<<<<<<< HEAD
 Project Link: [https://github.com/PDangelmaier/paperless-ngx-n8n-integration](https://github.com/PDangelmaier/paperless-ngx-n8n-integration)
-=======
-Project Link: https://github.com/PDangelmaier/paperless-ngx-n8n-integration/
->>>>>>> 7064d2687701965746684bdff81c72a7d915d0a9
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
